@@ -27,7 +27,9 @@ public class Map
 	
 	public void clearNodes()
 	{
-		nodeList.clear();
+		nodeList.clear();	
+		pathNodeIndexList.clear();
+		pathParameter.clearEdge();
 	}
 	
 	//add new node into Map
@@ -43,16 +45,8 @@ public class Map
 		nodeList.add(nodeObject);//add node into list
 	}	
 	
-	public boolean createParameterMatrices()
-	{
-		int nNode = nodeList.size();
-		pathParameter.setnNode(nNode);
-		return pathParameter.createParameterMatrices();
-	}
-	
 	public boolean addEdge(String label_1, String label_2, int distance, double energyCost, boolean rechargeStation)
-	{
-		//find index of label_1 and label_2 from vertexList
+	{			
 		int index_1 = -1, index_2 = -1;
 		for(int i=0;i<nodeList.size();i++)
 		{
@@ -79,8 +73,8 @@ public class Map
 		
 		if( (index_1 == -1) || (index_2 == -1) )//if index not found, return false;
 			return false;
-						
-		return pathParameter.addEdge( index_1, index_2, distance, energyCost, rechargeStation);
+		
+		return pathParameter.addEdge( index_1, index_2, label_1, label_2, distance, energyCost, rechargeStation);
 	}
 	
 	//reset node status, such as priority and previuous node.
@@ -176,16 +170,18 @@ public class Map
 			}
 			nodeBuffer.remove(findIndex);
 			
-			//find all vertex which connected to vertex u
-			int u_index = u.getIndex();//the index of vertex u
-			Vector<Integer> indexList = getAdjacencyIndexList(u_index);	
+			//find all vertex which connected to node u
+			int u_index = u.getIndex();//the index of node u
+			String u_label = u.getLabel();//the label of node u
+			Vector<Integer> indexList = getAdjacencyIndexList(u_label);	
 			for(int i=0;i<indexList.size();i++)
 			{
 				int v_index = indexList.get(i);
 				Node v = nodeList.get(v_index);//get node object v from original nodelist by index
-	
+				String v_label = v.getLabel();
+				
 				double tempPriority = 0;
-				tempPriority = pathParameter.caculatePrioirty(u_index, v_index);
+				tempPriority = pathParameter.caculatePrioirty(u_label, v_label);
 				double alt = u.getPriority() + tempPriority;//get new priority from s to v
 				if( alt < v.getPriority() )//if new priority is smaller, then update
 				{
@@ -193,12 +189,12 @@ public class Map
 					v.setPreviousNode(u_index);//update previous index to node
 					
 					//update distance and energy for comparing result
-					int newDis = u.getPathDistance() + (int)pathParameter.caculatePrioirty_dis(u_index, v_index);
+					int newDis = u.getPathDistance() + (int)pathParameter.caculatePrioirty_dis(u_label, v_label);
 					v.setPathDistance(newDis);
-					double newEnergy = u.getPathEnergyCost() + pathParameter.caculatePrioirty_energy(u_index, v_index);
+					double newEnergy = u.getPathEnergyCost() + pathParameter.caculatePrioirty_energy(u_label, v_label);
 					v.setPathEnergyCost(newEnergy);
 					int stationNumber = u.getPathStationNumber();
-					if( pathParameter.hasRechargeStation(u_index, v_index) )
+					if( pathParameter.hasRechargeStation(u_label, v_label) )
 					{
 						stationNumber++;
 					}
@@ -206,7 +202,7 @@ public class Map
 				}	
 				else
 				{	//consider recharge station
-					boolean hasRechargeStation = pathParameter.hasRechargeStation(u_index, v_index); 
+					boolean hasRechargeStation = pathParameter.hasRechargeStation(u_label, v_label); 
 					if( (checkRechargeStation == true) && (hasRechargeStation == true) )
 					{
 						double threshold = 0.1;
@@ -223,9 +219,9 @@ public class Map
 							v.setPreviousNode(u_index);//update previous index to node
 							
 							//update distance and energy for comparing result
-							int newDis = u.getPathDistance() + (int)pathParameter.caculatePrioirty_dis(u_index, v_index);
+							int newDis = u.getPathDistance() + (int)pathParameter.caculatePrioirty_dis(u_label, v_label);
 							v.setPathDistance(newDis);
-							double newEnergy = u.getPathEnergyCost() + pathParameter.caculatePrioirty_energy(u_index, v_index);
+							double newEnergy = u.getPathEnergyCost() + pathParameter.caculatePrioirty_energy(u_label, v_label);
 							v.setPathEnergyCost(newEnergy);
 							int stationNumber = u.getPathStationNumber();
 							stationNumber++;
@@ -281,21 +277,19 @@ public class Map
 	}
 	
 	//grab index list which connect to vertexIndex
-	private Vector<Integer> getAdjacencyIndexList(int vertexIndex)
+	private Vector<Integer> getAdjacencyIndexList(String label)
 	{
 		Vector<Integer> indexList = new Vector<Integer>();
 		indexList.clear();
 		
-		//get edgeDisMatrix from paramester
-		int[][] edgeDisMatrix = pathParameter.getEdgeDisMatrix();
+		Edge_Start startEdge = pathParameter.getStartEdgeByLabel(label);
+		if( startEdge == null )	{ return indexList; }
 		
-		//check the adj-matrix is valid or not
-		if( vertexIndex >= edgeDisMatrix.length ) { return indexList; }//index is larger martrix
-		
-		for(int j=0;j<edgeDisMatrix[vertexIndex].length;j++)//search adj-matrix
+		Vector<Edge_End> endEdgeList = startEdge.getEndEdgeList();
+		for(int i=0;i<endEdgeList.size();i++)
 		{
-			if( edgeDisMatrix[vertexIndex][j] != -1 )//find edge
-				indexList.add(new Integer(j));//add to list
+			int index = endEdgeList.get(i).getNodeIndex();
+			indexList.add(new Integer(index));
 		}	
 		return indexList;
 	}

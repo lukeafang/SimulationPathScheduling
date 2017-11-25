@@ -28,7 +28,6 @@ public class MapGenerator
 	public boolean generateMap_2(Map map)
 	{
 		map.clearNodes();
-		map.getPathNodeIndexList().clear();
 		//start add nodes
 		String label = "";
 		int x = 0, y = 0;
@@ -62,9 +61,7 @@ public class MapGenerator
 		label = String.format("%d", index++);
 		x = 2;
 		y = 0;
-		map.addNode(label, x, y);		
-		
-		map.createParameterMatrices();//create edge matrices		
+		map.addNode(label, x, y);				
 		
 		//add edge into graph
 		if( map.addEdge("0", "1", 12, 1, false) == false ) { System.out.println("add edge fault"); }		
@@ -82,7 +79,6 @@ public class MapGenerator
 	public boolean generateMap_1(Map map)
 	{
 		map.clearNodes();
-		map.getPathNodeIndexList().clear();
 		
 		int index = 1;
 		
@@ -107,8 +103,6 @@ public class MapGenerator
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
-        map.createParameterMatrices();//create edge matrices	
 		
       //load edge information file and add edge to map
 		fileName = String.format("mapData/%d_edge.txt", index);	

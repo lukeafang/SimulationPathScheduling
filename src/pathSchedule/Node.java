@@ -1,8 +1,5 @@
 package pathSchedule;
 
-import java.awt.Point;
-import java.awt.geom.Point2D;
-
 public class Node
 {
 	private int index;//the index of this node

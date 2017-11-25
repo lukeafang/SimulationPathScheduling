@@ -22,6 +22,8 @@ import javax.swing.border.MatteBorder;
 
 import org.w3c.dom.NodeList;
 
+import pathSchedule.Edge_End;
+import pathSchedule.Edge_Start;
 import pathSchedule.Map;
 import pathSchedule.MapGenerator;
 import pathSchedule.Node;
@@ -459,73 +461,68 @@ public class SimulationPathScheduling
 		int drawX1=0, drawY1=0;
 		int drawX2=0, drawY2=0;
 		PathParameter pathParameter = map.getPathParameter();
-		int[][] edgeDisMatrix = pathParameter.getEdgeDisMatrix();
-		double[][] edgeEnergyMatrix = pathParameter.getEdgeEnergyMatrix();
-		boolean[][] edgeRechargeStationMatrix = pathParameter.getEdgeRechargeStationMatrix();
-		for(int i=0;i<edgeDisMatrix.length;i++)
+		Vector<Edge_Start> startEdgeList = pathParameter.getStartEdgeList();
+		for(int i=0;i<startEdgeList.size();i++)
 		{
-			for(int j=0;j<edgeDisMatrix[0].length;j++)
-			{
-				if( edgeDisMatrix[i][j] != -1 )//exist edge
-				{//draw edge
-					//get two node by index
-					Node node1 = nodeList.get(i);
-					if(node1 == null)	{ System.out.println("node1 = null"); return; }
-					Node node2 = nodeList.get(j);
-					if(node2 == null)	{ System.out.println("node1 = null"); return; }
-					
-					int tempX = node1.getPositionX();
-					int tempY = node1.getPositionY();			
-					drawX1 = (int) (m_centerPanelX + (tempX-m_centerMapX) * m_resolution_X);
-					drawY1 = (int) (m_centerPanelY + (tempY-m_centerMapY) * m_resolution_Y);
-					
-					tempX = node2.getPositionX();
-					tempY = node2.getPositionY();			
-					drawX2 = (int) (m_centerPanelX + (tempX-m_centerMapX) * m_resolution_X);
-					drawY2 = (int) (m_centerPanelY + (tempY-m_centerMapY) * m_resolution_Y);
-					g.setColor(Color.BLACK);
-					g.drawLine(drawX1, drawY1, drawX2, drawY2);
-					
-					//draw arrow
-					if( isShowArrow )
-					{
-						drawArrowLine( g, drawX1, drawY1, drawX2, drawY2);
-					}
-							
-					
-					int dis = edgeDisMatrix[i][j];
-					drawX = (int)((0.1*drawX1 + 0.9*drawX2) );
-					drawY = (int)((0.1*drawY1 + 0.9*drawY2) );
-					if(isShowDistance)
-					{
-						g.setColor(Color.RED);
-						g.drawString(String.format("%d", dis), drawX, drawY);						
-					}
-
-
-					double energyCost = edgeEnergyMatrix[i][j];
-					drawY += 12;
-					if( isShowEnergy )
-					{
-						g.setColor(Color.BLUE);
-						g.drawString(String.format("%.1f", energyCost), drawX, drawY);						
-					}
-				
-					drawY += 10;
-					g.setColor(Color.BLUE);
-					if( isShowRechargeStation )
-					{
-						boolean rechargeStation = edgeRechargeStationMatrix[i][j];
-						if( rechargeStation )
-						{
-							g.drawString("•", drawX, drawY);
-						}						
-					}
+			Edge_Start startEdge = startEdgeList.get(i);
+			int startIndex = startEdge.getNodeIndex();
+			//get two node by index
+			Node node1 = nodeList.get(startIndex);
+			if(node1 == null)	{ System.out.println("node1 = null"); return; }
 			
+			Vector<Edge_End> endEdgeList = startEdge.getEndEdgeList();
+			for(int j=0;j<endEdgeList.size();j++)
+			{
+				Edge_End endEdge = endEdgeList.get(j);
+				int endIndex = endEdge.getNodeIndex();
+				Node node2 = nodeList.get(endIndex);
+				if(node2 == null)	{ System.out.println("node1 = null"); return; }
+			
+				int tempX = node1.getPositionX();
+				int tempY = node1.getPositionY();			
+				drawX1 = (int) (m_centerPanelX + (tempX-m_centerMapX) * m_resolution_X);
+				drawY1 = (int) (m_centerPanelY + (tempY-m_centerMapY) * m_resolution_Y);
+				
+				tempX = node2.getPositionX();
+				tempY = node2.getPositionY();			
+				drawX2 = (int) (m_centerPanelX + (tempX-m_centerMapX) * m_resolution_X);
+				drawY2 = (int) (m_centerPanelY + (tempY-m_centerMapY) * m_resolution_Y);
+				g.setColor(Color.BLACK);
+				g.drawLine(drawX1, drawY1, drawX2, drawY2);
+				
+				//draw arrow
+				if( isShowArrow ) { drawArrowLine( g, drawX1, drawY1, drawX2, drawY2); }
+				
+				int dis = endEdge.getDistance();
+				drawX = (int)((0.1*drawX1 + 0.9*drawX2) );
+				drawY = (int)((0.1*drawY1 + 0.9*drawY2) );
+				if(isShowDistance)
+				{
+					g.setColor(Color.RED);
+					g.drawString(String.format("%d", dis), drawX, drawY);						
+				}			
+				
+				double energyCost = endEdge.getEnergyCost();
+				drawY += 12;
+				if( isShowEnergy )
+				{
+					g.setColor(Color.BLUE);
+					g.drawString(String.format("%.1f", energyCost), drawX, drawY);						
 				}
-			}
+							
+				drawY += 10;
+				g.setColor(Color.BLUE);
+				if( isShowRechargeStation )
+				{
+					boolean rechargeStation = endEdge.isRechargeStation();
+					if( rechargeStation )
+					{
+						g.drawString("•", drawX, drawY);
+					}						
+				}				
+			}		
 		}
-		
+				
 		drawPath(g);	
 	}
 	
