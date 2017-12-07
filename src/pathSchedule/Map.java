@@ -170,6 +170,7 @@ public class Map
 			}
 			nodeBuffer.remove(findIndex);
 			
+			
 			//find all vertex which connected to node u
 			int u_index = u.getIndex();//the index of node u
 			String u_label = u.getLabel();//the label of node u
@@ -182,6 +183,15 @@ public class Map
 				
 				double tempPriority = 0;
 				tempPriority = pathParameter.caculatePrioirty(u_label, v_label);
+				if( checkRechargeStation )
+				{
+					boolean hasRechargeStation = pathParameter.hasRechargeStation(u_label, v_label);
+					if( hasRechargeStation )
+					{
+						double gamma = 0.1;
+						tempPriority *= gamma;						
+					}
+				}
 				double alt = u.getPriority() + tempPriority;//get new priority from s to v
 				if( alt < v.getPriority() )//if new priority is smaller, then update
 				{
@@ -199,39 +209,9 @@ public class Map
 						stationNumber++;
 					}
 					v.setPathStationNumber(stationNumber);
-				}	
-				else
-				{	//consider recharge station
-					boolean hasRechargeStation = pathParameter.hasRechargeStation(u_label, v_label); 
-					if( (checkRechargeStation == true) && (hasRechargeStation == true) )
-					{
-						double threshold = 0.1;
-						double diffValue = alt - v.getPriority();
-						//check diffValue, if value in threshold then update this
-						if( alt != 0 )
-						{
-							diffValue = diffValue / alt;
-						}
-						
-						if( Math.abs(diffValue) <= threshold )
-						{
-							v.setPriority(alt);//update new priority to node
-							v.setPreviousNode(u_index);//update previous index to node
-							
-							//update distance and energy for comparing result
-							int newDis = u.getPathDistance() + (int)pathParameter.caculatePrioirty_dis(u_label, v_label);
-							v.setPathDistance(newDis);
-							double newEnergy = u.getPathEnergyCost() + pathParameter.caculatePrioirty_energy(u_label, v_label);
-							v.setPathEnergyCost(newEnergy);
-							int stationNumber = u.getPathStationNumber();
-							stationNumber++;
-							v.setPathStationNumber(stationNumber);							
-						}
-						
-					}					
-				}
-				
-			}		
+				}		
+			}//end indexlist loop
+
 		}		
 		
 		//find the index of destination node
@@ -252,7 +232,7 @@ public class Map
 		
 		Node destNode = nodeList.get(destinationIndex);//get destination node
 		String label = destNode.getLabel();
-		System.out.println("The path from ( "+startNode+" ) to ( "+label+" ) is "+destNode.getPriority());
+//		System.out.println("The path from ( "+startNode+" ) to ( "+label+" ) is "+destNode.getPriority());
 		
 		Stack<Integer> stack = new Stack<Integer>();	
 		index = destinationIndex;

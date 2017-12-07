@@ -14,15 +14,7 @@ public class MapGenerator
 	
 	public boolean generateMap(Map map, int mapIndex)
 	{
-		if( mapIndex == 1 )
-		{
-			return generateMap_1(map);
-		}
-		else if(mapIndex == 2 )
-		{
-			return generateMap_2(map);
-		}
-		return true;
+		return generateMapbyFile(map, mapIndex);
 	}
 	
 	public boolean generateMap_2(Map map)
@@ -76,11 +68,11 @@ public class MapGenerator
 		return true;
 	}
 	
-	public boolean generateMap_1(Map map)
+	public boolean generateMapbyFile(Map map, int mapIndex)
 	{
 		map.clearNodes();
 		
-		int index = 1;
+		int index = mapIndex;
 		
 		//load node information file and add node to map
 		String fileName = "";
@@ -101,7 +93,9 @@ public class MapGenerator
                 map.addNode(label, x, y);	       
             }
         } catch (IOException e) {
-            e.printStackTrace();
+        	System.out.println("file not exit! path:" + fileName);
+          //  e.printStackTrace();
+            return false;
         }
 		
       //load edge information file and add edge to map
@@ -136,7 +130,9 @@ public class MapGenerator
             	
             }
         } catch (IOException e) {
-            e.printStackTrace();
+        	System.out.println("file not exit! path:" + fileName);
+         //   e.printStackTrace();
+            return false;
         }        
 	  
        

@@ -75,6 +75,7 @@ public class SimulationPathScheduling
 	private JLabel lblPathStationNumber;
 	private JTextField txtPathStationNumber;
 	private JComboBox comboBoxMap;
+	private JCheckBox chkDrawLowEnergyPath;
 
 	/**
 	 * Launch the application.
@@ -128,18 +129,18 @@ public class SimulationPathScheduling
 		//--------------------------------------------//
 		
 		frame = new JFrame();
-		frame.setBounds(100, 50, 800, 600);
+		frame.setBounds(100, 50, 952, 690);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
 		
 		JSplitPane splitPane = new JSplitPane();
 		splitPane.setEnabled(false);
 		splitPane.setBackground(Color.ORANGE);
-		splitPane.setBounds(6, 6, 788, 588);
+		splitPane.setBounds(6, 6, 940, 656);
 		frame.getContentPane().add(splitPane);
 		
 		JPanel panelMapData = new JPanel();
-		panelMapData.setPreferredSize(new Dimension(500,588));
+		panelMapData.setPreferredSize(new Dimension(650,588));
 		splitPane.setLeftComponent(panelMapData);
 		panelMapData.setLayout(null);
 		
@@ -155,7 +156,7 @@ public class SimulationPathScheduling
 		
 		panelDrawing = new JPanel();
 		panelDrawing.setBorder(new MatteBorder(1, 1, 1, 1, (Color) new Color(0, 0, 0)));
-		panelDrawing.setBounds(6, 159, 488, 386);
+		panelDrawing.setBounds(6, 99, 638, 553);
 		panelMapData.add(panelDrawing);
 		
 		chkShowDistance = new JCheckBox("dis");
@@ -170,7 +171,7 @@ public class SimulationPathScheduling
 				drawMap();
 			}
 		});
-		chkShowDistance.setBounds(281, 124, 59, 23);
+		chkShowDistance.setBounds(280, 64, 59, 23);
 		panelMapData.add(chkShowDistance);
 		
 		chkShowEnergy = new JCheckBox("energy");
@@ -185,7 +186,7 @@ public class SimulationPathScheduling
 				drawMap();
 			}
 		});
-		chkShowEnergy.setBounds(334, 124, 74, 23);
+		chkShowEnergy.setBounds(331, 64, 74, 23);
 		panelMapData.add(chkShowEnergy);
 		
 		chkShowRechargeStation = new JCheckBox("recharge");
@@ -200,7 +201,7 @@ public class SimulationPathScheduling
 				drawMap();
 			}
 		});
-		chkShowRechargeStation.setBounds(408, 124, 86, 23);
+		chkShowRechargeStation.setBounds(408, 64, 86, 23);
 		panelMapData.add(chkShowRechargeStation);
 		
 		chkShowArrow = new JCheckBox("arrow");
@@ -216,7 +217,7 @@ public class SimulationPathScheduling
 			}
 		});
 		chkShowArrow.setSelected(false);
-		chkShowArrow.setBounds(168, 124, 86, 23);
+		chkShowArrow.setBounds(162, 64, 86, 23);
 		panelMapData.add(chkShowArrow);
 		
 		chkShowPath = new JCheckBox("path");
@@ -226,13 +227,23 @@ public class SimulationPathScheduling
 			}
 		});
 		chkShowPath.setSelected(false);
-		chkShowPath.setBounds(6, 124, 74, 23);
+		chkShowPath.setBounds(6, 64, 74, 23);
 		panelMapData.add(chkShowPath);
 		
 		comboBoxMap = new JComboBox();
-		comboBoxMap.setModel(new DefaultComboBoxModel(new String[] {"1", "2", "3"}));
+		comboBoxMap.setModel(new DefaultComboBoxModel(new String[] {"1", "2"}));
 		comboBoxMap.setBounds(121, 7, 106, 27);
 		panelMapData.add(comboBoxMap);
+		
+		chkDrawLowEnergyPath = new JCheckBox("E");
+		chkDrawLowEnergyPath.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				drawMap();
+			}
+		});
+		chkDrawLowEnergyPath.setSelected(false);
+		chkDrawLowEnergyPath.setBounds(69, 64, 74, 23);
+		panelMapData.add(chkDrawLowEnergyPath);
 		
 		
 		JPanel panelPathScheduling = new JPanel();
@@ -366,8 +377,8 @@ public class SimulationPathScheduling
 		chkShowEnergy.setSelected(isShowEnergy);
 		chkShowRechargeStation.setSelected(isShowRechargeStation);
 		
-		txtStartNode.setText("0");
-		txtDesNode.setText("4");
+		txtStartNode.setText("05");
+		txtDesNode.setText("81");
 		
 		//update parameter
 		String tempStr = "";
@@ -383,7 +394,10 @@ public class SimulationPathScheduling
 		String string = comboBoxMap.getSelectedItem().toString();
 		mapIndex = Integer.parseInt(string);	
 		MapGenerator mapGenerator = new MapGenerator();
-		mapGenerator.generateMap(map, mapIndex);
+		if ( mapGenerator.generateMap(map, mapIndex) == false)
+		{
+			System.out.println("create map by file fault!");
+		}
 		
 	}
 	
@@ -458,6 +472,9 @@ public class SimulationPathScheduling
 			
 		}
 				
+		boolean isDrawLowEnergyPath = false;
+		if( chkDrawLowEnergyPath.isSelected() )	{ isDrawLowEnergyPath = true; }
+		
 		int drawX1=0, drawY1=0;
 		int drawX2=0, drawY2=0;
 		PathParameter pathParameter = map.getPathParameter();
@@ -487,7 +504,22 @@ public class SimulationPathScheduling
 				tempY = node2.getPositionY();			
 				drawX2 = (int) (m_centerPanelX + (tempX-m_centerMapX) * m_resolution_X);
 				drawY2 = (int) (m_centerPanelY + (tempY-m_centerMapY) * m_resolution_Y);
-				g.setColor(Color.BLACK);
+				
+				if( isDrawLowEnergyPath )
+				{
+					if( endEdge.getEnergyCost() <= 1 )
+					{
+						g.setColor(Color.GREEN);
+					}		
+					else
+					{
+						g.setColor(Color.BLACK);
+					}
+				}
+				else
+				{
+					g.setColor(Color.BLACK);
+				}
 				g.drawLine(drawX1, drawY1, drawX2, drawY2);
 				
 				//draw arrow
@@ -525,7 +557,7 @@ public class SimulationPathScheduling
 				
 		drawPath(g);	
 	}
-	
+		
 	/**
 	 * draw path
 	 * @param g
